@@ -1,0 +1,10 @@
+                    React Frontend
+                           │
+                    API Gateway
+                           │
+     ┌─────────────────────┼─────────────────────┐
+     │                     │                     │
+     ▼                     ▼                     ▼
+Auth Service        Tourism Service      Payment Service
+     │                     │                     │
+ auth_db             tourism_db          payment_db
