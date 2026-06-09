@@ -3,10 +3,10 @@
  * Centralized API communication layer
  */
 
-import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
-import { authStore } from '@/store/auth.store';
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from "axios";
+import { authStore } from "@/store/auth.store";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = "http://localhost:3000/api";
 
 class ApiClient {
   private client: AxiosInstance;
@@ -16,12 +16,12 @@ class ApiClient {
       baseURL: API_BASE_URL,
       timeout: 10000,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     // Add token to requests
-    this.client.interceptors.request.use((config) => {
+    this.client.interceptors.request.use(config => {
       const token = authStore.getToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -31,12 +31,12 @@ class ApiClient {
 
     // Handle responses
     this.client.interceptors.response.use(
-      (response) => response,
+      response => response,
       (error: AxiosError) => {
         // Handle 401 - Unauthorized
         if (error.response?.status === 401) {
           authStore.clearAuth();
-          window.location.href = '/login';
+          window.location.href = "/login";
         }
         return Promise.reject(error);
       }
@@ -54,7 +54,11 @@ class ApiClient {
   /**
    * POST request
    */
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async post<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const response = await this.client.post<T>(url, data, config);
     return response.data;
   }
@@ -62,7 +66,11 @@ class ApiClient {
   /**
    * PUT request
    */
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async put<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const response = await this.client.put<T>(url, data, config);
     return response.data;
   }
@@ -70,7 +78,11 @@ class ApiClient {
   /**
    * PATCH request
    */
-  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async patch<T>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     const response = await this.client.patch<T>(url, data, config);
     return response.data;
   }
@@ -86,10 +98,14 @@ class ApiClient {
   /**
    * Upload file
    */
-  async uploadFile<T>(url: string, file: File, additionalData?: Record<string, any>): Promise<T> {
+  async uploadFile<T>(
+    url: string,
+    file: File,
+    additionalData?: Record<string, any>
+  ): Promise<T> {
     const formData = new FormData();
-    formData.append('file', file);
-    
+    formData.append("file", file);
+
     if (additionalData) {
       Object.entries(additionalData).forEach(([key, value]) => {
         formData.append(key, String(value));
@@ -98,7 +114,7 @@ class ApiClient {
 
     const response = await this.client.post<T>(url, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
     return response.data;
