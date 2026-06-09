@@ -1,0 +1,68 @@
+/**
+ * SmartTouristPlatform - Login Page
+ */
+
+import { useLocation } from 'wouter';
+import { LoginForm } from '@/features/auth/components/LoginForm';
+import { ROUTES } from '@/config/routes';
+
+export default function Login() {
+  const [, navigate] = useLocation();
+
+  const handleLoginSuccess = () => {
+    navigate(ROUTES.TOURIST_DASHBOARD);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-md">
+        {/* Card */}
+        <div className="bg-card rounded-lg border border-border shadow-lg p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">S</span>
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Welcome Back</h1>
+            <p className="text-muted-foreground">Sign in to your SmartTourist account</p>
+          </div>
+
+          {/* Form */}
+          <LoginForm onSuccess={handleLoginSuccess} />
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-card text-muted-foreground">Don't have an account?</span>
+            </div>
+          </div>
+
+          {/* Register Link */}
+          <button
+            onClick={() => navigate(ROUTES.REGISTER)}
+            className="w-full py-2 px-4 border border-border rounded-lg hover:bg-accent transition-colors text-foreground font-medium"
+          >
+            Create Account
+          </button>
+        </div>
+
+        {/* Footer Text */}
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          By signing in, you agree to our{' '}
+          <a href="#" className="text-primary hover:underline">
+            Terms of Service
+          </a>{' '}
+          and{' '}
+          <a href="#" className="text-primary hover:underline">
+            Privacy Policy
+          </a>
+        </p>
+      </div>
+    </div>
+  );
+}
