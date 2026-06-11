@@ -26,7 +26,7 @@ public class GuideService {
     }
 
     @Transactional
-    public GuideProfileRequest createGuideProfile(User user) {
+    public Guide createGuideProfile(User user) {
         Guide guide = new Guide();
         guide.setId(user.getId()); // Link to User ID
         guide.setUser(user);
@@ -88,7 +88,7 @@ public class GuideService {
                 .orElseThrow(() -> new ResourceNotFoundException("Guide profile not found"));
 
         if (guide.getCertifications() != null) {
-            guide.getCertifications().removeIf(cert -> cert.getName().equals(certId));
+            guide.getCertifications().removeIf(cert -> cert.getClass().equals(certId));
             guide.setUpdatedAt(Instant.now());
             guideRepository.save(guide);
         }

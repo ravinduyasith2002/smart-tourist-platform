@@ -14,8 +14,8 @@ public class GuideProfileRequest {
     private BigDecimal hourlyRate;
     @Min(value = 0, message = "Daily rate must be positive")
     private BigDecimal dailyRate;
-    private List<Specialization> specializations;
-    private List<Language> languages;
-    private List<Certification> certifications;
+    private List specializations;
+    private List languages;
+    private List certifications;
 }
 

@@ -31,9 +31,9 @@ public class Guide {
     private boolean isVerified = false;
     private Instant verificationDate;
     private boolean bankAccountVerified = false;
-    private List<Specialization > specializations;
-    private List<Language > languages;
-    private List<Certification > certifications;
+    private List specializations;
+    private List languages;
+    private List certifications;
     private Instant createdAt;
     private Instant updatedAt;
 }

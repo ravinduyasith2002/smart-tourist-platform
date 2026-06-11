@@ -20,7 +20,7 @@ public class AuthResponse {
     @Builder
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class AuthData {
-        private String userId;
+        public String userId;
         private String email;
         private String name;
         private String role;

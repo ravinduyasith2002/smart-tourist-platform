@@ -40,23 +40,11 @@ public class Hotel {
     private Instant verificationDate;
     private String licenseNumber;
     private Instant licenseExpiry;
-    private List<Amenity> amenities;
-    private List<RoomSummary> rooms;
+    private List amenities;
+    private List rooms;
     private Instant createdAt;
     private Instant updatedAt;
+
 }
 
-@Data
-class Amenity {
-    private String name;
-    private String category;
-    private String description;
-}
-
-@Data
-class RoomSummary {
-    private String roomType;
-    private int count;
-    private BigDecimal pricePerNight;
-}
 

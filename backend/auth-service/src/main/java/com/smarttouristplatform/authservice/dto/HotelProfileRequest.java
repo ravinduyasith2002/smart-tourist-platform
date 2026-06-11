@@ -44,7 +44,7 @@ public class HotelProfileRequest {
     private String licenseNumber;
 
     // Temporary until these models are created
-    private List<Amenity> amenities;
+    private List amenities;
 
-    private List<RoomSummary> rooms;
+    private List rooms;
 }

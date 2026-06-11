@@ -24,7 +24,7 @@ public class HotelService {
     @Transactional
     public Hotel createHotelProfile(User user) {
         Hotel hotel = new Hotel();
-        hotel.setId(user.getId()); // Link to User ID
+        hotel.setId(user.getId());
         hotel.setUser(user);
         hotel.setCreatedAt(Instant.now());
         hotel.setUpdatedAt(Instant.now());

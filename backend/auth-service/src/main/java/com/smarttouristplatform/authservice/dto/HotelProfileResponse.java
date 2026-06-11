@@ -60,13 +60,13 @@ public class HotelProfileResponse {
 
     private Instant licenseExpiry;
 
-    // Temporary until these models are created
-    private List<Amenity> amenities;
+    private List amenities;
 
-    private List<RoomSummary> rooms;
+    private List rooms;
 
     private Instant createdAt;
 
     private Instant updatedAt;
 }
+
 
