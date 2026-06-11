@@ -9,4 +9,7 @@ public class CertificationRequest {
     private Instant issueDate;
     private Instant expiryDate;
     private String certUrl;
+
+    public void setVerified(boolean b) {
+    }
 }

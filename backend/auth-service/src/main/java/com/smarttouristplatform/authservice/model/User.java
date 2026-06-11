@@ -1,19 +1,37 @@
 package com.smarttouristplatform.authservice.model;
-
+import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.time.Instant;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Document(collection = "users")
+@Document(collection =
+        "`users`")
 public class User {
     @Id
     private String id;
-    private String username;
+
+    @Indexed(unique = true)
     private String email;
+    private String passwordHash;
+    private String name;
+    private UserRole role;
+    private String avatarUrl;
+    private String phone;
+    private String bio;
+    private boolean isVerified = false;
+    private boolean isActive = true;
+    private boolean isDeleted = false;
+    private Instant deletedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
+
+    public enum UserRole {
+        TOURIST,
+        GUIDE,
+        HOTEL,
+        ADMIN
+    }
 }

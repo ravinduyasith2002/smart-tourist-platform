@@ -59,3 +59,4 @@ class RoomSummary {
     private int count;
     private BigDecimal pricePerNight;
 }
+

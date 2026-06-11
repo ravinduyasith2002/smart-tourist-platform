@@ -40,14 +40,37 @@ public class GuideProfileResponse {
     private Instant verificationDate;
 
     private boolean bankAccountVerified;
-    
-    private List<String> specializations;
 
-    private List<String> languages;
+    private List<Specialization> specializations;
 
-    private List<String> certifications;
+    private List<Language> languages;
+
+    private List<Certification > certifications;
 
     private Instant createdAt;
 
     private Instant updatedAt;
+}
+
+@Data
+class Specialization {
+    private String name;
+    private String experienceLevel;
+    private String certificationUrl;
+}
+
+@Data
+class Language {
+    private String language;
+    private String proficiency;
+}
+
+@Data
+class Certification {
+    private String name;
+    private String org;
+    private Instant issueDate;
+    private Instant expiryDate;
+    private String certUrl;
+    private boolean isVerified;
 }

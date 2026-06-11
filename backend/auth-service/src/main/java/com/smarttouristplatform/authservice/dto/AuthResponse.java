@@ -38,6 +38,8 @@ public class AuthResponse {
         private Instant tokenExpiry;
         private Instant passwordChangedAt;
         private Integer sessionsRevoked;
-        private Object profile; 
+        private Object profile;
+        private Boolean resetTokenSent;
+        private Integer expiresInMinutes;
     }
 }
