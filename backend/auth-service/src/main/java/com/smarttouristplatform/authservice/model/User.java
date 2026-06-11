@@ -23,7 +23,7 @@ public class User {
     private String avatarUrl;
     private String phone;
     private String bio;
-    private boolean isVerified = false;
+    private boolean isVerified = true;
     private boolean isActive = true;
     private boolean isDeleted = false;
     private Instant deletedAt;

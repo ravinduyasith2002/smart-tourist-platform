@@ -67,7 +67,7 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
 
-        user.setRole(User.UserRole.valueOf(request.getRole().toUpperCase())); // FIXED
+        user.setRole(User.UserRole.valueOf(request.getRole().toUpperCase()));
         user.setPhone(request.getPhone());
 
         user.setCreatedAt(Instant.now());
