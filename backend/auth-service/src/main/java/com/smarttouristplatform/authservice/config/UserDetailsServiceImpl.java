@@ -13,22 +13,27 @@ import java.util.Collections;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    // Using setter injection or constructor injection with @Autowired if not using Spring's direct constructor injection
-    public void setUserRepository(UserRepository userRepository) {
+    public UserDetailsServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    public UserDetails loadUserByUsername(String userId)
+            throws UsernameNotFoundException {
+
+        User user = userRepository.findByEmail(userId)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException(
+                                "User not found with email: " + userId));
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPasswordHash(),
-                Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name()))
+                Collections.singletonList(
+                        new SimpleGrantedAuthority(user.getRole().name())
+                )
         );
     }
 }

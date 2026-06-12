@@ -26,7 +26,7 @@ public class UserService {
     }
 
     public Optional<UserResponse> getUserProfile(String userId) {
-        return userRepository.findById(userId)
+        return userRepository.findByEmail(userId)
                 .map(this::mapUserToUserResponse);
     }
 

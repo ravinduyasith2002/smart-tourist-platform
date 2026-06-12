@@ -20,32 +20,68 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserDetailsServiceImpl userDetailsService;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService ) {
+    public JwtAuthFilter(
+            JwtUtil jwtUtil,
+            UserDetailsServiceImpl userDetailsService) {
+
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
+
+        System.out.println("-----------------------come to here 1 ");
+
         String authHeader = request.getHeader("Authorization");
-        String token = null;
-        String username = null;
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-            username = jwtUtil.extractUsername(token);
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("-----------------------come to here 2 ");
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (jwtUtil.validateToken(token)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        try {
+
+            String token = authHeader.substring(7);
+            System.out.println("-----------------------come to here 3 "+ token);
+
+            String userEmail = jwtUtil.extractUsername(token);
+
+            System.out.println("-----------------------come to here 4 "+ userEmail);
+
+            if (userEmail != null ) {
+                System.out.println("-----------------------come to here 5 "+ "to find user details function");
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(userEmail);
+
+                if (jwtUtil.validateToken(token)) {
+                    System.out.println("-----------------------come to here validation token  6 ");
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
+
+                    authentication.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request));
+
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authentication);
+                }
             }
+            System.out.println("-----------------------come to here validatin 8 ");
+
+        } catch (Exception e) {
+            System.out.println("JWT Filter Error: " + e.getMessage());
         }
+
         filterChain.doFilter(request, response);
     }
 }
