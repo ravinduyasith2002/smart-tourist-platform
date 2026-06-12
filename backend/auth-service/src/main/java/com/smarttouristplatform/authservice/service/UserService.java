@@ -31,8 +31,8 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse updateUserProfile(String userId, UserUpdateRequest request) {
-        User user = userRepository.findById(userId)
+    public UserResponse updateUserProfile(String userEmail, UserUpdateRequest request) {
+        User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Optional.ofNullable(request.getName()).ifPresent(user::setName);
@@ -46,8 +46,8 @@ public class UserService {
     }
 
     @Transactional
-    public AuthResponse changePassword(String userId, ChangePasswordRequest request) {
-        User user = userRepository.findById(userId)
+    public AuthResponse changePassword(String userEmail, ChangePasswordRequest request) {
+        User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
@@ -77,8 +77,8 @@ public class UserService {
     }
 
     @Transactional
-    public void deleteAccount(String userId) {
-        User user = userRepository.findById(userId)
+    public void deleteAccount(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.setDeleted(true);

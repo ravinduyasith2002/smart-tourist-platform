@@ -1,11 +1,9 @@
 package com.smarttouristplatform.authservice.controller;
 
-import com.smarttouristplatform.authservice.dto.AuthResponse;
-import com.smarttouristplatform.authservice.dto.ChangePasswordRequest;
-import com.smarttouristplatform.authservice.dto.UserResponse;
-import com.smarttouristplatform.authservice.dto.UserUpdateRequest;
+import com.smarttouristplatform.authservice.dto.*;
 import com.smarttouristplatform.authservice.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -21,59 +19,134 @@ public class UserController {
         this.userService = userService;
     }
 
-    //  Get logged-in user email/username from JWT context
+    // Get logged-in user email from JWT
     private String getCurrentUserEmail(Authentication authentication) {
-        System.out.println("-------come to here 9-------------"+authentication.getName());
-        return authentication.getName(); // comes from JWT (username/email)
+        return authentication.getName();
     }
 
+    // ===================== GET PROFILE =====================
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getCurrentUserProfile(Authentication authentication) {
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUserProfile(
+            Authentication authentication) {
 
-        String email = getCurrentUserEmail(authentication);
-        System.out.println("-------come to here 10 authontica-------------"+authentication);
-        System.out.println("-------come to here 11 mail-------------"+email);
+        try {
+            String email = getCurrentUserEmail(authentication);
 
-        UserResponse userResponse = userService.getUserProfile(email)
-                .orElseThrow(() -> new RuntimeException("User profile not found"));
-        System.out.println("-------come to here 12 response-------------"+userResponse);
-        return ResponseEntity.ok(userResponse);
+            UserResponse userResponse = userService.getUserProfile(email)
+                    .orElseThrow(() -> new RuntimeException("User profile not found"));
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+                            "User profile fetched successfully",
+                            userResponse
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new ApiResponse<>(
+                            false,
+                            e.getMessage(),
+                            null
+                    )
+            );
+        }
     }
 
+    // ===================== UPDATE PROFILE =====================
     @PutMapping("/me")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<UserResponse> updateCurrentUserProfile(
+    public ResponseEntity<ApiResponse<UserResponse>> updateCurrentUserProfile(
             Authentication authentication,
             @Valid @RequestBody UserUpdateRequest request) {
 
-        String email = getCurrentUserEmail(authentication);
+        try {
+            String email = getCurrentUserEmail(authentication);
 
-        UserResponse updatedUser = userService.updateUserProfile(email, request);
+            UserResponse updatedUser =
+                    userService.updateUserProfile(email, request);
 
-        return ResponseEntity.ok(updatedUser);
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+                            "User profile updated successfully",
+                            updatedUser
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new ApiResponse<>(
+                            false,
+                            e.getMessage(),
+                            null
+                    )
+            );
+        }
     }
 
+    // ===================== CHANGE PASSWORD =====================
     @PostMapping("/change-password")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<AuthResponse> changePassword(
+    public ResponseEntity<ApiResponse<AuthResponse>> changePassword(
             Authentication authentication,
             @Valid @RequestBody ChangePasswordRequest request) {
 
-        String email = getCurrentUserEmail(authentication);
+        try {
+            String email = getCurrentUserEmail(authentication);
 
-        AuthResponse response = userService.changePassword(email, request);
+            AuthResponse response =
+                    userService.changePassword(email, request);
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+                            "Password changed successfully",
+                            response
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new ApiResponse<>(
+                            false,
+                            e.getMessage(),
+                            null
+                    )
+            );
+        }
     }
 
+    // ===================== DELETE ACCOUNT =====================
     @DeleteMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteAccount(Authentication authentication) {
+    public ResponseEntity<ApiResponse<Object>> deleteAccount(
+            Authentication authentication) {
 
-        String email = getCurrentUserEmail(authentication);
+        try {
+            String email = getCurrentUserEmail(authentication);
 
-        userService.deleteAccount(email);
+            userService.deleteAccount(email);
 
-        return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+                            "Account deleted successfully",
+                            null
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new ApiResponse<>(
+                            false,
+                            e.getMessage(),
+                            null
+                    )
+            );
+        }
     }
 }
