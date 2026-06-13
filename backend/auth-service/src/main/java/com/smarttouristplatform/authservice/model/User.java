@@ -9,7 +9,7 @@ import java.time.Instant;
 
 @Data
 @Document(collection =
-        "`users`")
+        "users")
 public class User {
     @Id
     private String id;

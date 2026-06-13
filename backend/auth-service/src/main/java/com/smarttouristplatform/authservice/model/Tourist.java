@@ -11,11 +11,13 @@ import java.time.Instant;
 @Data
 @Document(collection = "tourists")
 public class Tourist {
+
     @Id
-    private String id; // Same as User ID
+    private String id;
+    private String email;
 
     @DBRef
-    private User user; // Reference to the User document
+    private User user;
 
     private int totalTrips = 0;
     private BigDecimal totalSpent = BigDecimal.ZERO;
@@ -30,6 +32,10 @@ public class Tourist {
     public enum TravelStyle {
         BUDGET,
         MODERATE,
-        LUXURY
+        LUXURY;
+
+        public static TravelStyle from(String value) {
+            return TravelStyle.valueOf(value.toUpperCase());
+        }
     }
 }

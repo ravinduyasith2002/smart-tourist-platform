@@ -13,6 +13,7 @@ import java.time.Instant;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TouristProfileResponse {
     private String touristId;
+    private String email;
     private String userId;
     private int totalTrips;
     private BigDecimal totalSpent;

@@ -146,7 +146,6 @@ public class AuthService {
                         .name(user.getName())
                         .role(user.getRole().name().toLowerCase())
                         .accessToken(accessToken)
-                        .refreshToken(refreshToken)
                         .tokenType("Bearer")
                         .expiresIn(jwtUtil.getAccessTokenExpirationMillis() / 1000)
                         .refreshExpiresIn(jwtUtil.getRefreshTokenExpirationMillis() / 1000)

@@ -1,4 +1,5 @@
 package com.smarttouristplatform.authservice.service;
+
 import com.smarttouristplatform.authservice.dto.TouristProfileRequest;
 import com.smarttouristplatform.authservice.dto.TouristProfileResponse;
 import com.smarttouristplatform.authservice.exception.ResourceNotFoundException;
@@ -23,45 +24,79 @@ public class TouristService {
     @Transactional
     public Tourist createTouristProfile(User user) {
         Tourist tourist = new Tourist();
-        tourist.setId(user.getId()); // Link to User ID
+        tourist.setId(user.getId());
+        tourist.setEmail(user.getEmail());
         tourist.setUser(user);
         tourist.setCreatedAt(Instant.now());
         tourist.setUpdatedAt(Instant.now());
+
         return touristRepository.save(tourist);
     }
 
-    public Optional<TouristProfileResponse> getTouristProfileByUserId(String userId) {
-        return touristRepository.findById(userId)
+    public Optional<TouristProfileResponse> getTouristProfileByUserId(String userEmail) {
+        return touristRepository.findByEmail(userEmail)
                 .map(this::mapTouristToTouristProfileResponse);
     }
 
     @Transactional
-    public TouristProfileResponse updateTouristProfile(String userId, TouristProfileRequest request) {
-        Tourist tourist = touristRepository.findById(userId)
+    public TouristProfileResponse updateTouristProfile(String userEmail, TouristProfileRequest request) {
+
+        Tourist tourist = touristRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Tourist profile not found"));
 
-        Optional.ofNullable(request.getPreferredLanguage()).ifPresent(tourist::setPreferredLanguage);
-        Optional.ofNullable(request.getPreferredCurrency()).ifPresent(tourist::setPreferredCurrency);
-        Optional.ofNullable(request.getTravelStyle()).ifPresent(tourist::setTravelStyle);
-        Optional.ofNullable(request.getBio()).ifPresent(tourist::setBio);
+
+        if (request.getPreferredLanguage() != null) {
+            tourist.setPreferredLanguage(request.getPreferredLanguage());
+        }
+
+        if (request.getPreferredCurrency() != null) {
+            tourist.setPreferredCurrency(request.getPreferredCurrency());
+        }
+
+
+        if (request.getTravelStyle() != null) {
+            tourist.setTravelStyle(
+                    Tourist.TravelStyle.from(request.getTravelStyle().toString())
+            );
+        }
+
+        if (request.getTotalTrips() != null) {
+            tourist.setTotalTrips(request.getTotalTrips());
+        }
+
+        if (request.getTotalSpent() != null) {
+            tourist.setTotalSpent(request.getTotalSpent());
+        }
+
+        if (request.getBio() != null) {
+            tourist.setBio(request.getBio());
+        }
+
         tourist.setUpdatedAt(Instant.now());
 
-        Tourist updatedTourist = touristRepository.save(tourist);
-        return mapTouristToTouristProfileResponse(updatedTourist);
+        Tourist updated = touristRepository.save(tourist);
+
+        return mapTouristToTouristProfileResponse(updated);
     }
 
-    // TODO: Implement add/remove/get favorite guides
-
     private TouristProfileResponse mapTouristToTouristProfileResponse(Tourist tourist) {
+
         return TouristProfileResponse.builder()
                 .touristId(tourist.getId())
-                .userId(tourist.getUser().getId())
+                .userId(tourist.getUser() != null ? tourist.getUser().getId() : null)
                 .totalTrips(tourist.getTotalTrips())
                 .totalSpent(tourist.getTotalSpent())
                 .averageRating(tourist.getAverageRating())
                 .preferredLanguage(tourist.getPreferredLanguage())
                 .preferredCurrency(tourist.getPreferredCurrency())
-                .travelStyle(tourist.getTravelStyle() != null ? Tourist.TravelStyle.valueOf(tourist.getTravelStyle().name().toLowerCase()) : null)
+
+
+                .travelStyle(
+                        tourist.getTravelStyle() != null
+                                ? Tourist.TravelStyle.valueOf(tourist.getTravelStyle().name())
+                                : null
+                )
+
                 .bio(tourist.getBio())
                 .createdAt(tourist.getCreatedAt())
                 .updatedAt(tourist.getUpdatedAt())
