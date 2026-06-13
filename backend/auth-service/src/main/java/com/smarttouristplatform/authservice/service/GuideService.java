@@ -1,11 +1,10 @@
 package com.smarttouristplatform.authservice.service;
 
-
-
 import com.smarttouristplatform.authservice.dto.CertificationRequest;
 import com.smarttouristplatform.authservice.dto.GuideProfileRequest;
 import com.smarttouristplatform.authservice.dto.GuideProfileResponse;
 import com.smarttouristplatform.authservice.exception.ResourceNotFoundException;
+import com.smarttouristplatform.authservice.model.Certification;
 import com.smarttouristplatform.authservice.model.Guide;
 import com.smarttouristplatform.authservice.model.User;
 import com.smarttouristplatform.authservice.repository.GuideRepository;
@@ -16,6 +15,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class GuideService {
@@ -26,29 +26,60 @@ public class GuideService {
         this.guideRepository = guideRepository;
     }
 
+
+    // CREATE GUIDE PROFILE
+
     @Transactional
     public Guide createGuideProfile(User user) {
+
         Guide guide = new Guide();
+
         guide.setId(user.getId());
         guide.setEmail(user.getEmail());
         guide.setUser(user);
+
+        // default values for new guide profile
         guide.setExperienceYears(0);
+        guide.setResponseTimeMins(60);
+        guide.setCancellationRate(0.0);
+        guide.setTotalBookings(0);
+        guide.setCompletedBookings(0);
+        guide.setTotalEarnings(java.math.BigDecimal.ZERO);
+        guide.setVerified(false);
+        guide.setBankAccountVerified(false);
+
         guide.setCreatedAt(Instant.now());
         guide.setUpdatedAt(Instant.now());
+
         return guideRepository.save(guide);
     }
 
-    public Optional<GuideProfileResponse> getGuideProfileByUserId(String userEmail) {
-        return guideRepository.findByEmail(userEmail)
+
+    // GET GUIDE PROFILE BY EMAIL
+
+    public Optional<GuideProfileResponse> getGuideProfileByUserId(String email) {
+        return guideRepository.findByEmail(email)
+                .map(this::mapGuideToGuideProfileResponse);
+    }
+    // GET GUIDE PROFILE BY ID
+
+    public Optional<GuideProfileResponse> getGuideProfileById(String userID) {
+        return guideRepository.findById(userID)
                 .map(this::mapGuideToGuideProfileResponse);
     }
 
+
+    // UPDATE GUIDE PROFILE
+
     @Transactional
-    public GuideProfileResponse updateGuideProfile(String userEmail, GuideProfileRequest request) {
+    public GuideProfileResponse updateGuideProfile(String email,
+                                                   GuideProfileRequest request) {
 
-        Guide guide = guideRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Guide profile not found"));
+        Guide guide = guideRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Guide profile not found"));
 
+        // update only if value is provided (PATCH-style update)
         Optional.ofNullable(request.getBio()).ifPresent(guide::setBio);
         Optional.ofNullable(request.getExperienceYears()).ifPresent(guide::setExperienceYears);
         Optional.ofNullable(request.getHourlyRate()).ifPresent(guide::setHourlyRate);
@@ -68,48 +99,92 @@ public class GuideService {
 
         guide.setUpdatedAt(Instant.now());
 
-        Guide updatedGuide = guideRepository.save(guide);
-
-        return mapGuideToGuideProfileResponse(updatedGuide);
+        return mapGuideToGuideProfileResponse(
+                guideRepository.save(guide)
+        );
     }
 
-    @Transactional
-    public GuideProfileResponse addCertification(String guideId, CertificationRequest request) {
-        Guide guide = guideRepository.findById(guideId)
-                .orElseThrow(() -> new ResourceNotFoundException("Guide profile not found"));
 
-        CertificationRequest certification = new CertificationRequest();
+    // ADD CERTIFICATION
+
+    @Transactional
+    public GuideProfileResponse addCertification(String guideEmail,
+                                                 CertificationRequest request) {
+
+        Guide guide = guideRepository.findByEmail(guideEmail)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Guide profile not found"));
+
+        Certification certification = new Certification();
+
+        // generate unique certification ID
+        certification.setCertId(UUID.randomUUID().toString());
+
         certification.setName(request.getName());
         certification.setOrg(request.getOrg());
         certification.setIssueDate(request.getIssueDate());
         certification.setExpiryDate(request.getExpiryDate());
         certification.setCertUrl(request.getCertUrl());
-        certification.setVerified(false); // New certifications are not verified by default
+        certification.setVerified(false);
 
+        // initialize list if null
         if (guide.getCertifications() == null) {
             guide.setCertifications(new ArrayList<>());
         }
+
         guide.getCertifications().add(certification);
+
         guide.setUpdatedAt(Instant.now());
 
-        Guide updatedGuide = guideRepository.save(guide);
-        return mapGuideToGuideProfileResponse(updatedGuide);
+        return mapGuideToGuideProfileResponse(
+                guideRepository.save(guide)
+        );
     }
+
+
+    // GET ALL CERTIFICATIONS
+
+    @Transactional(readOnly = true)
+    public List<Certification> getCertifications(String guideEmail) {
+
+        Guide guide = guideRepository.findByEmail(guideEmail)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Guide profile not found"));
+
+        return guide.getCertifications() == null
+                ? new ArrayList<>()
+                : guide.getCertifications();
+    }
+
+
+    // DELETE CERTIFICATION
 
     @Transactional
-    public void deleteCertification(String guideId, String certId) {
-        Guide guide = guideRepository.findById(guideId)
-                .orElseThrow(() -> new ResourceNotFoundException("Guide profile not found"));
+    public void deleteCertification(String guideEmail,
+                                    String certId) {
 
-        if (guide.getCertifications() != null) {
-            guide.getCertifications().removeIf(cert -> cert.getClass().equals(certId));
-            guide.setUpdatedAt(Instant.now());
-            guideRepository.save(guide);
+        Guide guide = guideRepository.findByEmail(guideEmail)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Guide profile not found"));
+
+        if (guide.getCertifications() == null ||
+                guide.getCertifications().isEmpty()) {
+            throw new ResourceNotFoundException("No certifications found");
         }
+
+        boolean removed = guide.getCertifications()
+                .removeIf(cert -> certId.equals(cert.getCertId()));
+
+        if (!removed) {
+            throw new ResourceNotFoundException("Certification not found");
+        }
+
+        guide.setUpdatedAt(Instant.now());
+        guideRepository.save(guide);
     }
 
-    // TODO: Implement search guides
 
+    // GET ALL GUIDES
 
     public List<GuideProfileResponse> getAllGuides() {
         return guideRepository.findAll()
@@ -118,7 +193,11 @@ public class GuideService {
                 .toList();
     }
 
+
+    // MAPPER: ENTITY -> DTO
+
     private GuideProfileResponse mapGuideToGuideProfileResponse(Guide guide) {
+
         return GuideProfileResponse.builder()
                 .guideId(guide.getId())
                 .userId(guide.getUser().getId())

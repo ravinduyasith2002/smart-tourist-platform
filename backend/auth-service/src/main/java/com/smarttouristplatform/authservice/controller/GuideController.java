@@ -96,10 +96,10 @@ public class GuideController {
             @Valid @RequestBody CertificationRequest request) {
 
         try {
-            String guideId = getUserIdFromAuthentication(userDetails);
+            String guideEmail = getUserIdFromAuthentication(userDetails);
 
             GuideProfileResponse updated =
-                    guideService.addCertification(guideId, request);
+                    guideService.addCertification(guideEmail, request);
 
             return ResponseEntity.ok(
                     new ApiResponse<>(
@@ -126,17 +126,15 @@ public class GuideController {
             @AuthenticationPrincipal UserDetails userDetails) {
 
         try {
-            String guideId = getUserIdFromAuthentication(userDetails);
+            String guideEmail = getUserIdFromAuthentication(userDetails);
 
-            GuideProfileResponse profile =
-                    guideService.getGuideProfileByUserId(guideId)
-                            .orElseThrow(() -> new RuntimeException("Guide not found"));
+            List Certifications  = guideService.getCertifications(guideEmail);
 
             return ResponseEntity.ok(
                     new ApiResponse<>(
                             true,
                             "Certifications fetched successfully",
-                            List.of() // replace with real mapping later
+                              Certifications
                     )
             );
 
@@ -158,9 +156,9 @@ public class GuideController {
             @PathVariable("cert_id") String certId) {
 
         try {
-            String guideId = getUserIdFromAuthentication(userDetails);
+            String guidEmail = getUserIdFromAuthentication(userDetails);
 
-            guideService.deleteCertification(guideId, certId);
+            guideService.deleteCertification(guidEmail, certId);
 
             return ResponseEntity.ok(
                     new ApiResponse<>(
@@ -181,7 +179,7 @@ public class GuideController {
         }
     }
 
-
+// Get All Guides
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<List<GuideProfileResponse>>> getAllGuides() {
@@ -240,13 +238,12 @@ public class GuideController {
 
     // ---------------- GET BY ID ----------------
     @GetMapping("/{guide_id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<GuideProfileResponse>> getGuideProfileById(
             @PathVariable("guide_id") String guideId) {
 
         try {
             GuideProfileResponse response =
-                    guideService.getGuideProfileByUserId(guideId)
+                    guideService.getGuideProfileById(guideId)
                             .orElseThrow(() -> new RuntimeException("Guide not found"));
 
             return ResponseEntity.ok(

@@ -1,16 +1,17 @@
-package com.smarttouristplatform.authservice.dto;
+package com.smarttouristplatform.authservice.model;
+
 import lombok.Data;
+
 import java.time.Instant;
 
 @Data
-public class CertificationRequest {
+public class Certification {
+
     private String certId;
     private String name;
     private String org;
     private Instant issueDate;
     private Instant expiryDate;
     private String certUrl;
-
-    public void setVerified(boolean b) {
-    }
+    private boolean verified;
 }

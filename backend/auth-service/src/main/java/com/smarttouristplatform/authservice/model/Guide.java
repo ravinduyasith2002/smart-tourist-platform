@@ -17,7 +17,7 @@ public class Guide {
     private String email;
 
     @DBRef
-    private User user; // Reference to the User document
+    private User user;
 
     private String bio;
     private int experienceYears;
@@ -34,30 +34,12 @@ public class Guide {
     private boolean bankAccountVerified = false;
     private List specializations;
     private List languages;
-    private List certifications;
+    private List<Certification>certifications;
     private Instant createdAt;
     private Instant updatedAt;
+
+
+
+
 }
 
-@Data
-class Specialization {
-    private String name;
-    private String experienceLevel;
-    private String certificationUrl;
-}
-
-@Data
-class Language {
-    private String language;
-    private String proficiency;
-}
-
-@Data
-class Certification {
-    private String name;
-    private String org;
-    private Instant issueDate;
-    private Instant expiryDate;
-    private String certUrl;
-    private boolean isVerified;
-}
