@@ -72,7 +72,8 @@ public class AuthService {
 
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
-        user.setVerified(false);
+        user.setVerified(user.getRole() == User.UserRole.TOURIST);
+
         user.setActive(true);
 
         User savedUser = userRepository.save(user);
@@ -110,13 +111,13 @@ public class AuthService {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        if (!user.isVerified()) {
-            return AuthResponse.builder()
-                    .success(false)
-                    .error("Account not verified")
-                    .code("ACCOUNT_NOT_VERIFIED")
-                    .build();
-        }
+//        if (!user.isVerified()) {
+//            return AuthResponse.builder()
+//                    .success(false)
+//                    .error("Account not verified")
+//                    .code("ACCOUNT_NOT_VERIFIED")
+//                    .build();
+//        }
 
         String accessToken = jwtUtil.generateAccessToken(user);
         String refreshToken = jwtUtil.generateRefreshToken(user);
