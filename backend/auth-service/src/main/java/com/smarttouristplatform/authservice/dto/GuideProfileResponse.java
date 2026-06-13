@@ -14,6 +14,9 @@ import java.util.List;
 public class GuideProfileResponse {
 
     private String guideId;
+    private String email;
+    private String name;
+
     private String userId;
     private String bio;
 

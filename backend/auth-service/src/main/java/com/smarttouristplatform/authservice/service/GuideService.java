@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -28,7 +29,8 @@ public class GuideService {
     @Transactional
     public Guide createGuideProfile(User user) {
         Guide guide = new Guide();
-        guide.setId(user.getId()); // Link to User ID
+        guide.setId(user.getId());
+        guide.setEmail(user.getEmail());
         guide.setUser(user);
         guide.setExperienceYears(0);
         guide.setCreatedAt(Instant.now());
@@ -36,26 +38,38 @@ public class GuideService {
         return guideRepository.save(guide);
     }
 
-    public Optional<GuideProfileResponse> getGuideProfileByUserId(String userId) {
-        return guideRepository.findById(userId)
+    public Optional<GuideProfileResponse> getGuideProfileByUserId(String userEmail) {
+        return guideRepository.findByEmail(userEmail)
                 .map(this::mapGuideToGuideProfileResponse);
     }
 
     @Transactional
-    public GuideProfileResponse updateGuideProfile(String userId, GuideProfileRequest request) {
-        Guide guide = guideRepository.findById(userId)
+    public GuideProfileResponse updateGuideProfile(String userEmail, GuideProfileRequest request) {
+
+        Guide guide = guideRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Guide profile not found"));
 
         Optional.ofNullable(request.getBio()).ifPresent(guide::setBio);
         Optional.ofNullable(request.getExperienceYears()).ifPresent(guide::setExperienceYears);
         Optional.ofNullable(request.getHourlyRate()).ifPresent(guide::setHourlyRate);
         Optional.ofNullable(request.getDailyRate()).ifPresent(guide::setDailyRate);
+
+        Optional.ofNullable(request.getResponseTimeMins()).ifPresent(guide::setResponseTimeMins);
+        Optional.ofNullable(request.getCancellationRate()).ifPresent(guide::setCancellationRate);
+        Optional.ofNullable(request.getTotalBookings()).ifPresent(guide::setTotalBookings);
+        Optional.ofNullable(request.getCompletedBookings()).ifPresent(guide::setCompletedBookings);
+        Optional.ofNullable(request.getTotalEarnings()).ifPresent(guide::setTotalEarnings);
+        Optional.ofNullable(request.getIsVerified()).ifPresent(guide::setVerified);
+        Optional.ofNullable(request.getBankAccountVerified()).ifPresent(guide::setBankAccountVerified);
+
         Optional.ofNullable(request.getSpecializations()).ifPresent(guide::setSpecializations);
         Optional.ofNullable(request.getLanguages()).ifPresent(guide::setLanguages);
         Optional.ofNullable(request.getCertifications()).ifPresent(guide::setCertifications);
+
         guide.setUpdatedAt(Instant.now());
 
         Guide updatedGuide = guideRepository.save(guide);
+
         return mapGuideToGuideProfileResponse(updatedGuide);
     }
 
@@ -96,10 +110,19 @@ public class GuideService {
 
     // TODO: Implement search guides
 
+
+    public List<GuideProfileResponse> getAllGuides() {
+        return guideRepository.findAll()
+                .stream()
+                .map(this::mapGuideToGuideProfileResponse)
+                .toList();
+    }
+
     private GuideProfileResponse mapGuideToGuideProfileResponse(Guide guide) {
         return GuideProfileResponse.builder()
                 .guideId(guide.getId())
                 .userId(guide.getUser().getId())
+                .email(guide.getUser().getEmail())
                 .bio(guide.getBio())
                 .experienceYears(guide.getExperienceYears())
                 .hourlyRate(guide.getHourlyRate())
