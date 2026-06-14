@@ -28,6 +28,14 @@ public class HotelProfileRequest {
 
     private String postalCode;
 
+    // Human readable location
+    private String location;
+
+    // Optional GPS coordinates
+    private Double latitude;
+
+    private Double longitude;
+
     private String phone;
 
     private String website;
@@ -35,14 +43,6 @@ public class HotelProfileRequest {
     private String checkInTime;
 
     private String checkOutTime;
-
-    private Double averageRating;
-
-    private Boolean isVerified;
-
-    private Instant verificationDate;
-
-    private Instant licenseExpiry;
 
     @Min(value = 0, message = "Total rooms cannot be negative")
     private Integer totalRooms;
@@ -52,7 +52,9 @@ public class HotelProfileRequest {
 
     private String licenseNumber;
 
-    private List amenities;
+    private Instant licenseExpiry;
 
-    private List rooms;
+    private List<String> amenities;
+
+    private List<Object> rooms;
 }

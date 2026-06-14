@@ -6,6 +6,7 @@ import com.smarttouristplatform.authservice.exception.ResourceNotFoundException;
 import com.smarttouristplatform.authservice.model.Hotel;
 import com.smarttouristplatform.authservice.model.User;
 import com.smarttouristplatform.authservice.repository.HotelRepository;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,9 +43,13 @@ public class HotelService {
     }
 
     @Transactional
-    public HotelProfileResponse updateHotelProfile(String userEmail, HotelProfileRequest request) {
+    public HotelProfileResponse updateHotelProfile(
+            String userEmail,
+            HotelProfileRequest request) {
+
         Hotel hotel = hotelRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Hotel profile not found"));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Hotel profile not found"));
 
         Optional.ofNullable(request.getHotelName()).ifPresent(hotel::setHotelName);
         Optional.ofNullable(request.getDescription()).ifPresent(hotel::setDescription);
@@ -53,59 +58,99 @@ public class HotelService {
         Optional.ofNullable(request.getState()).ifPresent(hotel::setState);
         Optional.ofNullable(request.getCountry()).ifPresent(hotel::setCountry);
         Optional.ofNullable(request.getPostalCode()).ifPresent(hotel::setPostalCode);
-        // Optional.ofNullable(request.getLocation()).ifPresent(hotel::setLocation);
+
         Optional.ofNullable(request.getPhone()).ifPresent(hotel::setPhone);
         Optional.ofNullable(request.getWebsite()).ifPresent(hotel::setWebsite);
+
         Optional.ofNullable(request.getCheckInTime()).ifPresent(hotel::setCheckInTime);
         Optional.ofNullable(request.getCheckOutTime()).ifPresent(hotel::setCheckOutTime);
+
         Optional.ofNullable(request.getTotalRooms()).ifPresent(hotel::setTotalRooms);
         Optional.ofNullable(request.getAvailableRooms()).ifPresent(hotel::setAvailableRooms);
-        Optional.ofNullable(request.getLicenseNumber()).ifPresent(hotel::setLicenseNumber);
-        Optional.ofNullable(request.getAmenities()).ifPresent(hotel::setAmenities);
-        Optional.ofNullable(request.getRooms()).ifPresent(hotel::setRooms);
-        hotel.setUpdatedAt(Instant.now());
 
-        Optional.ofNullable(request.getTotalBookings()).ifPresent(hotel::setTotalBookings);
-        Optional.ofNullable(request.getTotalRevenue()).ifPresent(hotel::setTotalRevenue);
-        Optional.ofNullable(request.getAverageRating()).ifPresent(hotel::setAverageRating);
-        Optional.ofNullable(request.getIsVerified()).ifPresent(hotel::setVerified);
-        Optional.ofNullable(request.getVerificationDate()).ifPresent(hotel::setVerificationDate);
+        Optional.ofNullable(request.getLicenseNumber()).ifPresent(hotel::setLicenseNumber);
         Optional.ofNullable(request.getLicenseExpiry()).ifPresent(hotel::setLicenseExpiry);
 
+        Optional.ofNullable(request.getAmenities()).ifPresent(hotel::setAmenities);
+        Optional.ofNullable(request.getRooms()).ifPresent(hotel::setRooms);
+
+        // Optional Geo Location
+        if (request.getLatitude() != null && request.getLongitude() != null) {
+            hotel.setLocation(
+                    new GeoJsonPoint(
+                            request.getLongitude(),
+                            request.getLatitude()
+                    )
+            );
+        }
+
+        hotel.setUpdatedAt(Instant.now());
+
         Hotel updatedHotel = hotelRepository.save(hotel);
+
         return mapHotelToHotelProfileResponse(updatedHotel);
     }
 
     // TODO: Implement search hotels
 
     private HotelProfileResponse mapHotelToHotelProfileResponse(Hotel hotel) {
+
         return HotelProfileResponse.builder()
                 .hotelId(hotel.getId())
                 .userId(hotel.getUser().getId())
                 .email(hotel.getUser().getEmail())
+
                 .hotelName(hotel.getHotelName())
                 .description(hotel.getDescription())
+
                 .address(hotel.getAddress())
                 .city(hotel.getCity())
                 .state(hotel.getState())
                 .country(hotel.getCountry())
                 .postalCode(hotel.getPostalCode())
-                .location(hotel.getLocation() != null ? hotel.getLocation().toString() : null) // Convert GeoJsonPoint to String
+
+                // Readable location
+                .location(
+                        hotel.getAddress() + ", " +
+                                hotel.getCity() + ", " +
+                                hotel.getCountry()
+                )
+
+                // Coordinates
+                .latitude(
+                        hotel.getLocation() != null
+                                ? hotel.getLocation().getY()
+                                : null
+                )
+
+                .longitude(
+                        hotel.getLocation() != null
+                                ? hotel.getLocation().getX()
+                                : null
+                )
+
                 .phone(hotel.getPhone())
                 .website(hotel.getWebsite())
+
                 .checkInTime(hotel.getCheckInTime())
                 .checkOutTime(hotel.getCheckOutTime())
+
                 .totalRooms(hotel.getTotalRooms())
                 .availableRooms(hotel.getAvailableRooms())
+
                 .averageRating(hotel.getAverageRating())
                 .totalBookings(hotel.getTotalBookings())
                 .totalRevenue(hotel.getTotalRevenue())
+
                 .verified(hotel.isVerified())
                 .verificationDate(hotel.getVerificationDate())
+
                 .licenseNumber(hotel.getLicenseNumber())
                 .licenseExpiry(hotel.getLicenseExpiry())
+
                 .amenities(hotel.getAmenities())
                 .rooms(hotel.getRooms())
+
                 .createdAt(hotel.getCreatedAt())
                 .updatedAt(hotel.getUpdatedAt())
                 .build();

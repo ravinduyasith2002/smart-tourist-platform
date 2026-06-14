@@ -16,6 +16,7 @@ public class HotelProfileResponse {
     private String hotelId;
 
     private String userId;
+
     private String email;
 
     private String hotelName;
@@ -32,8 +33,13 @@ public class HotelProfileResponse {
 
     private String postalCode;
 
-    // Geo location represented as text
+    // Readable location
     private String location;
+
+    // GPS Coordinates
+    private Double latitude;
+
+    private Double longitude;
 
     private String phone;
 
@@ -61,13 +67,11 @@ public class HotelProfileResponse {
 
     private Instant licenseExpiry;
 
-    private List amenities;
+    private List<String> amenities;
 
-    private List rooms;
+    private List<Object> rooms;
 
     private Instant createdAt;
 
     private Instant updatedAt;
 }
-
-
