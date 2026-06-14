@@ -16,6 +16,7 @@ public class HotelProfileResponse {
     private String hotelId;
 
     private String userId;
+    private String email;
 
     private String hotelName;
 

@@ -25,6 +25,7 @@ public class HotelService {
     public Hotel createHotelProfile(User user) {
         Hotel hotel = new Hotel();
         hotel.setId(user.getId());
+        hotel.setEmail(user.getEmail());
         hotel.setUser(user);
         hotel.setCreatedAt(Instant.now());
         hotel.setUpdatedAt(Instant.now());
@@ -35,10 +36,14 @@ public class HotelService {
         return hotelRepository.findById(userId)
                 .map(this::mapHotelToHotelProfileResponse);
     }
+    public Optional<HotelProfileResponse> getHotelProfileByUserEmail(String userEmail) {
+        return hotelRepository.findByEmail(userEmail)
+                .map(this::mapHotelToHotelProfileResponse);
+    }
 
     @Transactional
-    public HotelProfileResponse updateHotelProfile(String userId, HotelProfileRequest request) {
-        Hotel hotel = hotelRepository.findById(userId)
+    public HotelProfileResponse updateHotelProfile(String userEmail, HotelProfileRequest request) {
+        Hotel hotel = hotelRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel profile not found"));
 
         Optional.ofNullable(request.getHotelName()).ifPresent(hotel::setHotelName);
@@ -60,6 +65,13 @@ public class HotelService {
         Optional.ofNullable(request.getRooms()).ifPresent(hotel::setRooms);
         hotel.setUpdatedAt(Instant.now());
 
+        Optional.ofNullable(request.getTotalBookings()).ifPresent(hotel::setTotalBookings);
+        Optional.ofNullable(request.getTotalRevenue()).ifPresent(hotel::setTotalRevenue);
+        Optional.ofNullable(request.getAverageRating()).ifPresent(hotel::setAverageRating);
+        Optional.ofNullable(request.getIsVerified()).ifPresent(hotel::setVerified);
+        Optional.ofNullable(request.getVerificationDate()).ifPresent(hotel::setVerificationDate);
+        Optional.ofNullable(request.getLicenseExpiry()).ifPresent(hotel::setLicenseExpiry);
+
         Hotel updatedHotel = hotelRepository.save(hotel);
         return mapHotelToHotelProfileResponse(updatedHotel);
     }
@@ -70,6 +82,7 @@ public class HotelService {
         return HotelProfileResponse.builder()
                 .hotelId(hotel.getId())
                 .userId(hotel.getUser().getId())
+                .email(hotel.getUser().getEmail())
                 .hotelName(hotel.getHotelName())
                 .description(hotel.getDescription())
                 .address(hotel.getAddress())

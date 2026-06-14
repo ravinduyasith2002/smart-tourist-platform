@@ -14,7 +14,8 @@ import java.util.List;
 @Document(collection = "hotels")
 public class Hotel {
     @Id
-    private String id; // Same as User ID
+    private String id;
+    private String email;
 
     @DBRef
     private User user; // Reference to the User document

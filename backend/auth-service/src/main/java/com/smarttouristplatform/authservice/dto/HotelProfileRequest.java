@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -35,6 +36,14 @@ public class HotelProfileRequest {
 
     private String checkOutTime;
 
+    private Double averageRating;
+
+    private Boolean isVerified;
+
+    private Instant verificationDate;
+
+    private Instant licenseExpiry;
+
     @Min(value = 0, message = "Total rooms cannot be negative")
     private Integer totalRooms;
 
@@ -43,7 +52,6 @@ public class HotelProfileRequest {
 
     private String licenseNumber;
 
-    // Temporary until these models are created
     private List amenities;
 
     private List rooms;
