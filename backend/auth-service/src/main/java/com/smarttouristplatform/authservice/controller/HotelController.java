@@ -76,25 +76,35 @@ public class HotelController {
         }
     }
 
-    // GET ALL HOTELS
+// ---------------- GET ALL HOTELS ----------------
     @GetMapping
-    public ResponseEntity<ApiResponse<HotelProfileResponse>> getHotelS(
-            @PathVariable("hotel_id") String hotelId) {
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<ApiResponse<List<HotelProfileResponse>>> getAllHotels() {
 
         try {
-            HotelProfileResponse response = hotelService.getHotelProfileByUserEmail(hotelId)
-                    .orElseThrow(() -> new RuntimeException("Hotel not found"));
+            List<HotelProfileResponse> hotels = hotelService.getAllHotels();
 
             return ResponseEntity.ok(
-                    new ApiResponse<>(true, "Hotel fetched successfully", response)
+                    new ApiResponse<>(
+                            true,
+                            "Hotels fetched successfully",
+                            hotels
+                    )
             );
 
         } catch (Exception e) {
-            return ResponseEntity.status(404).body(
-                    new ApiResponse<>(false, e.getMessage(), null)
+
+            return ResponseEntity.status(500).body(
+                    new ApiResponse<>(
+                            false,
+                            e.getMessage(),
+                            null
+                    )
             );
         }
     }
+
+
     // GET HOTEL BY ID
     @GetMapping("/{hotel_id}")
     @PreAuthorize("isAuthenticated()")
@@ -102,7 +112,7 @@ public class HotelController {
             @PathVariable("hotel_id") String hotelId) {
 
         try {
-            HotelProfileResponse response = hotelService.getHotelProfileByUserEmail(hotelId)
+            HotelProfileResponse response = hotelService.getHotelProfileByUserId(hotelId)
                     .orElseThrow(() -> new RuntimeException("Hotel not found"));
 
             return ResponseEntity.ok(

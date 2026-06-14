@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -31,6 +32,16 @@ public class HotelService {
         hotel.setCreatedAt(Instant.now());
         hotel.setUpdatedAt(Instant.now());
         return hotelRepository.save(hotel);
+    }
+
+    // ---------------- GET ALL HOTELS ----------------
+    @Transactional(readOnly = true)
+    public List<HotelProfileResponse> getAllHotels() {
+
+        return hotelRepository.findAll()
+                .stream()
+                .map(this::mapHotelToHotelProfileResponse)
+                .toList();
     }
 
     public Optional<HotelProfileResponse> getHotelProfileByUserId(String userId) {
@@ -90,6 +101,7 @@ public class HotelService {
 
         return mapHotelToHotelProfileResponse(updatedHotel);
     }
+
 
     // TODO: Implement search hotels
 
