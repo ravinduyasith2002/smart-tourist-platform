@@ -1,0 +1,375 @@
+# SMART TOURIST PLATFORM - TOURIST API TESTING FLOW
+
+====================================================
+
+1. REGISTER TOURIST
+   ====================================================
+
+POST http://localhost/api/auth/register
+
+{
+"nic": "200112345678",
+"email": "[tourist1@example.com](mailto:tourist1@example.com)",
+"password": "Password@123",
+"confirmPassword": "Password@123",
+"name": "John Doe",
+"role": "TOURIST",
+"phone": "+94771234567",
+"bio": "I love traveling around Sri Lanka.",
+"avatarUrl": "https://example.com/avatar.jpg"
+}
+
+---
+
+2. LOGIN
+
+POST http://localhost/api/auth/login
+
+{
+"email": "[tourist1@example.com](mailto:tourist1@example.com)",
+"password": "Password@123"
+}
+
+Save the accessToken.
+
+---
+
+3. GET USER PROFILE
+
+GET http://localhost/api/users/me
+
+Header:
+Authorization: Bearer <accessToken>
+
+---
+
+4. UPDATE USER PROFILE
+
+PUT http://localhost/api/users/me
+
+Header:
+Authorization: Bearer <accessToken>
+
+{
+"name": "John Snow",
+"phone": "+94771234567",
+"bio": "Love traveling in Sri Lanka.",
+"avatarUrl": "https://example.com/new-avatar.jpg"
+}
+
+---
+
+5. GET TOURIST PROFILE
+
+GET http://localhost/api/tourists/me
+
+Header:
+Authorization: Bearer <accessToken>
+
+---
+
+6. UPDATE TOURIST PROFILE
+
+PUT http://localhost/api/tourists/me
+
+Header:
+Authorization: Bearer <accessToken>
+
+{
+"preferredLanguage": "English",
+"preferredCurrency": "USD",
+"travelStyle": "MODERATE",
+"totalTrips": 15,
+"totalSpent": 2500,
+"bio": "Luxury traveler."
+}
+
+---
+
+7. GET ALL GUIDES
+
+GET http://localhost/api/guides
+
+Copy the guideId.
+
+---
+
+8. GET GUIDE DETAILS
+
+GET http://localhost/api/guides/{guideId}
+
+Example:
+GET http://localhost/api/guides/6a2dc4739dd2c092f47680eb
+
+---
+
+9. GET ALL HOTELS
+
+GET http://localhost/api/hotels
+
+Copy the hotelId.
+
+---
+
+10. GET HOTEL DETAILS
+
+GET http://localhost/api/hotels/{hotelId}
+
+---
+
+11. CREATE TRIP
+
+POST http://localhost/api/trips
+
+Header:
+Authorization: Bearer <accessToken>
+
+{
+"title": "Sri Lanka Adventure Trip",
+"description": "Exploring beaches and mountains",
+"startDate": "2026-07-01",
+"endDate": "2026-07-10",
+"budget": 1500,
+"currency": "USD",
+"isPublic": true,
+"destinations": [
+{
+"name": "Colombo",
+"country": "Sri Lanka",
+"coordinates": [79.8612, 6.9271],
+"visitOrder": 1
+},
+{
+"name": "Kandy",
+"country": "Sri Lanka",
+"coordinates": [80.6337, 7.2906],
+"visitOrder": 2
+}
+]
+}
+
+Save the tripId.
+
+---
+
+12. GET MY TRIPS
+
+GET http://localhost/api/trips
+
+OR
+
+GET http://localhost/api/trips?status=planning&page=1&limit=10
+
+Header:
+Authorization: Bearer <accessToken>
+
+---
+
+13. GET TRIP DETAILS
+
+GET http://localhost/api/trips/{tripId}
+
+---
+
+14. UPDATE TRIP
+
+PUT http://localhost/api/trips/{tripId}
+
+Header:
+Authorization: Bearer <accessToken>
+
+{
+"title": "Updated Sri Lanka Trip",
+"budget": 1800,
+"isPublic": false
+}
+
+---
+
+15. ADD ITINERARY
+
+POST http://localhost/api/trips/{tripId}/itinerary
+
+Header:
+Authorization: Bearer <accessToken>
+
+{
+"dayNumber": 1,
+"date": "2026-07-01",
+"location": "Colombo",
+"title": "Arrival",
+"description": "Arrival day",
+"activities": [
+{
+"title": "Hotel Check-in",
+"category": "accommodation",
+"startTime": "14:00",
+"endTime": "15:00",
+"location": "Colombo",
+"estimatedCost": 50
+}
+]
+}
+
+---
+
+16. CREATE GUIDE BOOKING
+
+POST http://localhost/api/guide-bookings
+
+Header:
+Authorization: Bearer <accessToken>
+
+{
+"guideId": "<guideId>",
+"tripId": "<tripId>",
+"bookingDate": "2026-07-02",
+"startTime": "09:00",
+"endTime": "17:00",
+"durationHours": 8,
+"location": "Kandy",
+"specialization": "Cultural Tours",
+"specialRequests": "English speaking guide"
+}
+
+---
+
+17. GET GUIDE BOOKINGS
+
+GET http://localhost/api/guide-bookings
+
+Header:
+Authorization: Bearer <accessToken>
+
+---
+
+18. CREATE HOTEL BOOKING
+
+POST http://localhost/api/hotel-bookings
+
+Header:
+Authorization: Bearer <accessToken>
+
+{
+"hotelId": "<hotelId>",
+"roomId": "101",
+"tripId": "<tripId>",
+"checkInDate": "2026-07-01",
+"checkOutDate": "2026-07-05",
+"numberOfGuests": 2,
+"specialRequests": "Sea view room"
+}
+
+---
+
+19. CHECK IN
+
+POST http://localhost/api/hotel-bookings/{bookingId}/check-in
+
+Header:
+Authorization: Bearer <accessToken>
+
+---
+
+20. CHECK OUT
+
+POST http://localhost/api/hotel-bookings/{bookingId}/check-out
+
+Header:
+Authorization: Bearer <accessToken>
+
+---
+
+21. CREATE GUIDE REVIEW
+
+POST http://localhost/api/reviews/guides/{guideBookingId}
+
+Header:
+Authorization: Bearer <accessToken>
+
+{
+"rating": 5,
+"title": "Amazing Guide",
+"comment": "Very professional",
+"categories": {
+"knowledge": 5,
+"communication": 5,
+"punctuality": 5,
+"friendliness": 5
+}
+}
+
+---
+
+22. CREATE HOTEL REVIEW
+
+POST http://localhost/api/reviews/hotels/{hotelBookingId}
+
+Header:
+Authorization: Bearer <accessToken>
+
+{
+"rating": 5,
+"title": "Excellent Stay",
+"comment": "Highly recommended",
+"categoryRatings": {
+"roomCleanliness": 5,
+"staffService": 5,
+"amenities": 5,
+"valueForMoney": 5,
+"location": 5
+}
+}
+
+---
+
+23. CHANGE PASSWORD
+
+PUT http://localhost/api/users/change-password
+
+Header:
+Authorization: Bearer <accessToken>
+
+{
+"currentPassword": "Password@123",
+"newPassword": "NewPassword@123",
+"confirmNewPassword": "NewPassword@123"
+}
+
+---
+
+24. DEACTIVATE ACCOUNT
+
+DELETE http://localhost/api/users/me
+
+Header:
+Authorization: Bearer <accessToken>
+
+====================================================
+TESTING ORDER
+=============
+
+1. Register
+2. Login
+3. Get User Profile
+4. Update User Profile
+5. Get Tourist Profile
+6. Update Tourist Profile
+7. Get All Guides
+8. Get Guide Details
+9. Get All Hotels
+10. Get Hotel Details
+11. Create Trip
+12. Get Trips
+13. Get Trip Details
+14. Update Trip
+15. Add Itinerary
+16. Create Guide Booking
+17. Get Guide Bookings
+18. Create Hotel Booking
+19. Check In
+20. Check Out
+21. Create Guide Review
+22. Create Hotel Review
+23. Change Password    // not created
+24. Deactivate Account // not created
