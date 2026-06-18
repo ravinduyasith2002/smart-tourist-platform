@@ -1,0 +1,227 @@
+====================================================
+        SMART TOURIST PLATFORM API ENDPOINTS
+====================================================
+
+BASE URL:
+http://localhost:8080
+
+
+====================================================
+✈️ TRIP MANAGEMENT ENDPOINTS
+====================================================
+
+1. CREATE TRIP
+POST /trips
+
+Request Body:
+{
+  "title": "Sri Lanka Adventure Trip",
+  "description": "Exploring beaches and mountains in Sri Lanka",
+  "startDate": "2026-07-01",
+  "endDate": "2026-07-10",
+  "budget": 1500.00,
+  "currency": "USD",
+  "isPublic": true,
+  "destinations": [
+    {
+      "name": "Colombo",
+      "country": "Sri Lanka",
+      "coordinates": [79.8612, 6.9271],
+      "visitOrder": 1
+    },
+    {
+      "name": "Kandy",
+      "country": "Sri Lanka",
+      "coordinates": [80.6337, 7.2906],
+      "visitOrder": 2
+    }
+  ]
+}
+
+
+res
+
+{
+    "success": true,
+    "message": "Trip created successfully",
+    "data": {
+        "budget": 1500.0,
+        "createdAt": "2026-06-18T15:55:29.6531601",
+        "currency": "USD",
+        "description": "Exploring beaches and mountains in Sri Lanka",
+        "destinations": [
+            {
+                "coordinates": [
+                    79.8612,
+                    6.9271
+                ],
+                "country": "Sri Lanka",
+                "name": "Colombo",
+                "visitOrder": 1
+            },
+            {
+                "coordinates": [
+                    80.6337,
+                    7.2906
+                ],
+                "country": "Sri Lanka",
+                "name": "Kandy",
+                "visitOrder": 2
+            }
+        ],
+        "endDate": "2026-07-10",
+        "id": "6a33c799563e02d39a999097",
+        "isPublic": true,
+        "itineraryDays": null,
+        "startDate": "2026-07-01",
+        "status": "planning",
+        "title": "Sri Lanka Adventure Trip",
+        "totalSpent": 0.0,
+        "touristId": "grandceylonhotel@example.com",
+        "updatedAt": "2026-06-18T15:55:29.6531601"
+    }
+}
+
+
+2. GET USER TRIPS
+GET /trips?status=planning&page=1&limit=10
+
+
+3. GET TRIP DETAILS
+GET /trips/101
+
+
+4. UPDATE TRIP
+PUT /trips/101
+
+{
+  "title": "Updated Sri Lanka Trip",
+  "budget": 1800.00,
+  "isPublic": false
+}
+
+
+5. DELETE TRIP
+DELETE /trips/101
+
+
+6. ADD ITINERARY DAY
+POST /trips/101/itinerary
+
+{
+  "dayNumber": 1,
+  "date": "2026-07-01",
+  "location": "Colombo",
+  "title": "Arrival Day",
+  "description": "Arrive in Colombo and relax",
+  "activities": [
+    {
+      "title": "Hotel Check-in",
+      "category": "accommodation",
+      "startTime": "14:00",
+      "endTime": "15:00",
+      "location": "Colombo Hotel",
+      "estimatedCost": 50
+    }
+  ]
+}
+
+
+====================================================
+🎫 GUIDE BOOKINGS
+====================================================
+
+1. CREATE GUIDE BOOKING
+POST /guide-bookings
+
+{
+  "guideId": "G1001",
+  "tripId": "101",
+  "bookingDate": "2026-07-02",
+  "startTime": "09:00",
+  "endTime": "17:00",
+  "durationHours": 8,
+  "location": "Kandy",
+  "specialization": "Cultural Tours",
+  "specialRequests": "English speaking guide preferred"
+}
+
+
+2. GET GUIDE BOOKINGS
+GET /guide-bookings?status=confirmed
+
+
+====================================================
+🏨 HOTEL BOOKINGS
+====================================================
+
+1. CREATE HOTEL BOOKING
+POST /hotel-bookings
+
+{
+  "hotelId": "H1001",
+  "roomId": "R101",
+  "tripId": "101",
+  "checkInDate": "2026-07-01",
+  "checkOutDate": "2026-07-05",
+  "numberOfGuests": 2,
+  "specialRequests": "Sea view room preferred"
+}
+
+
+2. CHECK IN
+POST /hotel-bookings/HB101/check-in
+
+
+3. CHECK OUT
+POST /hotel-bookings/HB101/check-out
+
+
+====================================================
+⭐ REVIEWS
+====================================================
+
+1. CREATE GUIDE REVIEW
+POST /reviews/guides/GB101
+
+{
+  "rating": 5,
+  "title": "Amazing Experience",
+  "comment": "The guide was very friendly and knowledgeable",
+  "categories": {
+    "knowledge": 5,
+    "communication": 5,
+    "punctuality": 5,
+    "friendliness": 5
+  }
+}
+
+
+2. CREATE HOTEL REVIEW
+POST /reviews/hotels/HB101
+
+{
+  "rating": 4,
+  "title": "Great Stay",
+  "comment": "Nice hotel with good service",
+  "categoryRatings": {
+    "roomCleanliness": 4,
+    "staffService": 5,
+    "amenities": 4,
+    "valueForMoney": 4,
+    "location": 5
+  }
+}
+
+
+3. GET GUIDE REVIEWS
+GET /reviews/guides/G1001?page=1&limit=5
+
+
+4. GET HOTEL REVIEWS
+GET /reviews/hotels/H1001?sort=-rating
+
+
+====================================================
+END OF API DOCUMENTATION
+====================================================
