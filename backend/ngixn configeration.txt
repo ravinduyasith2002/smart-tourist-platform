@@ -1,0 +1,46 @@
+NGINX SETUP GUIDE (API GATEWAY)
+
+1. Install NGINX
+Download from:
+https://nginx.org/en/download.html
+
+
+2. Copy configuration file
+From your project:
+backend/nginx/nginx.conf
+
+Copy it to:
+C:\nginx\conf\nginx.conf
+
+
+3. Start NGINX
+Open CMD and run:
+cd C:\nginx
+start nginx
+
+
+4. Reload configuration (after changes)
+nginx -s reload
+
+If reload does not work, restart:
+nginx -s stop
+start nginx
+
+
+5. Test API Gateway
+
+Test root:
+http://localhost/
+
+Test Auth Service:
+http://localhost/api/auth/login
+
+Test Tourism Service:
+http://localhost/api/tours
+
+
+6. Notes
+- NGINX runs on port 80 by default
+- Make sure backend services are running:
+  Auth Service → 8081
+  Tourism Service → 8082
