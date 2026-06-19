@@ -1,0 +1,226 @@
+import { useRoute, useLocation } from 'wouter';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { hotelService } from '@/services/hotel.service';
+import { Navbar } from '@/components/Navbar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { MapPin, Mail, Phone, Globe, Clock, ShieldCheck, Building, Star, Bed, Users, DollarSign, Wifi, CheckCircle, XCircle } from 'lucide-react';
+
+export default function HotelDetail() {
+  const [, params] = useRoute('/hotels/:id');
+  const [, setLocation] = useLocation();
+  const [hotel, setHotel] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (params?.id) fetchHotel(params.id);
+  }, [params?.id]);
+
+  const fetchHotel = async (id) => {
+    setLoading(true);
+    try {
+      const res = await hotelService.getHotelById(id);
+      const d = res.data || res;
+      setHotel(d);
+    } catch (error) {
+      toast.error('Failed to load hotel details');
+      setLocation('/hotels');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <LoadingSkeleton count={1} type="card" />
+        </div>
+      </>
+    );
+  }
+
+  if (!hotel) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <p className="text-gray-500">Hotel not found</p>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+          {/* Header */}
+          <Card className="shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-8 text-white">
+              <div className="flex items-center gap-6">
+                <div className="w-24 h-24 bg-white rounded-xl flex items-center justify-center text-4xl font-bold text-purple-600 shadow-md">
+                  <Building className="w-10 h-10" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold">{hotel.hotelName}</h1>
+                  <p className="text-purple-100 mt-1 flex items-center gap-1">
+                    <MapPin className="w-4 h-4" /> {hotel.location || `${hotel.city}, ${hotel.state}, ${hotel.country}`}
+                  </p>
+                  <div className="flex items-center gap-3 mt-2">
+                    {hotel.verified && (
+                      <Badge className="bg-emerald-500 text-white border-0">
+                        <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Verified
+                      </Badge>
+                    )}
+                    {hotel.rating && (
+                      <span className="flex items-center gap-1 text-yellow-200">
+                        <Star className="w-4 h-4 fill-yellow-200" /> {hotel.rating.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <CardContent className="p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left: Main info */}
+                <div className="lg:col-span-2 space-y-6">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900 mb-2">About</h2>
+                    <p className="text-gray-600">{hotel.description || 'No description available.'}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900">Address</h3>
+                      <p className="text-gray-600">{hotel.address}<br />{hotel.city}, {hotel.state} {hotel.postalCode}<br />{hotel.country}</p>
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="font-semibold text-gray-900">Contact</h3>
+                      <p className="text-gray-600 space-y-1">
+                        {hotel.email && <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> {hotel.email}</span>}
+                        {hotel.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {hotel.phone}</span>}
+                        {hotel.website && <span className="flex items-center gap-1"><Globe className="w-3.5 h-3.5" /> {hotel.website}</span>}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Check-in / Check-out</h3>
+                    <div className="flex gap-4 text-sm">
+                      <Badge variant="outline" className="text-xs">
+                        <Clock className="w-3 h-3 mr-1" /> Check-in: {hotel.checkInTime || '14:00'}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        <Clock className="w-3 h-3 mr-1" /> Check-out: {hotel.checkOutTime || '11:00'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Amenities</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.isArray(hotel.amenities) && hotel.amenities.length > 0
+                        ? hotel.amenities.map((a) => <Badge key={a} variant="secondary"><Wifi className="w-3 h-3 mr-1" />{a}</Badge>)
+                        : <span className="text-gray-400 text-sm">Not specified</span>}
+                    </div>
+                  </div>
+
+                  {hotel.licenseNumber && (
+                    <div className="text-xs text-gray-400">
+                      License: {hotel.licenseNumber}
+                      {hotel.licenseExpiry && ` (expires ${new Date(hotel.licenseExpiry).toLocaleDateString()})`}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right: Stats sidebar */}
+                <div className="space-y-4">
+                  <Card className="bg-gray-50 border-0">
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Total Rooms</span>
+                        <span className="font-bold">{hotel.totalRooms ?? 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Available</span>
+                        <span className="font-bold text-emerald-600">{hotel.availableRooms ?? 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Total Bookings</span>
+                        <span className="font-bold">{hotel.totalBookings ?? 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">Revenue</span>
+                        <span className="font-bold text-primary">${(hotel.totalRevenue ?? 0).toLocaleString()}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Rooms Section */}
+          <Card className="shadow-lg">
+            <CardContent className="p-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Bed className="w-5 h-5" /> Rooms ({hotel.rooms?.length || 0})
+              </h2>
+
+              {Array.isArray(hotel.rooms) && hotel.rooms.length > 0 ? (
+                <div className="space-y-4">
+                  {hotel.rooms.map((room, idx) => (
+                    <Card key={room.roomNumber || idx} className={`border ${room.available ? 'border-slate-200' : 'border-red-200 bg-red-50'}`}>
+                      <CardContent className="p-5">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-gray-900">{room.roomType} - Room {room.roomNumber}</h3>
+                              {room.available
+                                ? <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Available</Badge>
+                                : <Badge className="bg-red-100 text-red-700 border-0 text-xs">Unavailable</Badge>}
+                            </div>
+                            <p className="text-sm text-gray-500">{room.description || `Capacity: ${room.capacity} guests`}</p>
+                            <div className="flex items-center gap-3 text-xs text-gray-500">
+                              <span className="flex items-center gap-1"><Users className="w-3 h-3" /> Up to {room.capacity} guests</span>
+                            </div>
+                          </div>
+                          <div className="text-right flex flex-row md:flex-col items-center md:items-end gap-3">
+                            <div>
+                              <span className="text-2xl font-extrabold text-gray-900">LKR {room.pricePerNight?.toLocaleString()}</span>
+                              <span className="text-xs text-gray-500"> /night</span>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="bg-primary hover:bg-primary/90 text-white"
+                              disabled={!room.available}
+                              onClick={() => setLocation(`/bookings/hotel/create?hotelId=${hotel.hotelId}&roomId=${room.roomNumber}`)}
+                            >
+                              {room.available ? 'Book Now' : 'Unavailable'}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-sm">No room information available.</p>
+              )}
+            </CardContent>
+          </Card>
+
+        </div>
+      </div>
+    </>
+  );
+}
