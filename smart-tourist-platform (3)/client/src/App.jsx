@@ -14,6 +14,7 @@ import GuideDetail from "./pages/GuideDetail";
 import HotelDetail from "./pages/HotelDetail";
 import Hotels from "./pages/Hotels";
 import Trips from "./pages/Trips";
+import TripDetail from "./pages/TripDetail";
 import Bookings from "./pages/Bookings";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { CreateTrip } from "./pages/CreateTrip";
@@ -60,6 +61,11 @@ function Router() {
       <Route path="/trips/create" component={() => (
         <ProtectedRoute>
           <CreateTrip />
+        </ProtectedRoute>
+      )} />
+      <Route path="/trips/:id" component={() => (
+        <ProtectedRoute>
+          <TripDetail />
         </ProtectedRoute>
       )} />
       <Route path="/bookings" component={() => (

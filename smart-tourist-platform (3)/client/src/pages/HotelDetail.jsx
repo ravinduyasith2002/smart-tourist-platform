@@ -2,21 +2,43 @@ import { useRoute, useLocation } from 'wouter';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { hotelService } from '@/services/hotel.service';
+import { hotelBookingService } from '@/services/hotelBooking.service';
+import { reviewService } from '@/services/review.service';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
-import { MapPin, Mail, Phone, Globe, Clock, ShieldCheck, Building, Star, Bed, Users, DollarSign, Wifi, CheckCircle, XCircle } from 'lucide-react';
+import { ReviewCard } from '@/components/ReviewCard';
+import { EmptyState } from '@/components/EmptyState';
+import { isAuthenticated as checkAuth } from '@/contexts/AuthContext';
+import { formatServerError } from '@/utils/helpers';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Rating } from '@/components/Rating';
+import { MapPin, Mail, Phone, Globe, Clock, ShieldCheck, Building, Star, Bed, Users, DollarSign, Wifi, CheckCircle, XCircle, MessageSquare, Star as StarIcon } from 'lucide-react';
 
 export default function HotelDetail() {
   const [, params] = useRoute('/hotels/:id');
   const [, setLocation] = useLocation();
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [loggedIn] = useState(checkAuth());
+  const [reviewDialog, setReviewDialog] = useState({ open: false, bookingId: null });
+  const [reviewForm, setReviewForm] = useState({ rating: 0, title: '', comment: '', categories: {} });
+  const [completedBookings, setCompletedBookings] = useState([]);
+  const [fetchingBookings, setFetchingBookings] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (params?.id) fetchHotel(params.id);
+    if (params?.id) {
+      fetchHotel(params.id);
+      fetchReviews(params.id);
+    }
   }, [params?.id]);
 
   const fetchHotel = async (id) => {
@@ -30,6 +52,73 @@ export default function HotelDetail() {
       setLocation('/hotels');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchReviews = async (id) => {
+    setReviewsLoading(true);
+    try {
+      const res = await reviewService.getHotelReviewsByHotel(id);
+      const data = res.data || res;
+      setReviews(Array.isArray(data) ? data : []);
+    } catch {
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const openReviewDialog = async () => {
+    if (!loggedIn) {
+      setLocation('/login');
+      return;
+    }
+    setFetchingBookings(true);
+    setReviewDialog({ open: true, bookingId: null });
+    try {
+      const res = await hotelBookingService.getBookings({ page: 1, limit: 50 });
+      const data = res.data || res;
+      const allBookings = Array.isArray(data) ? data : [];
+      const hotelId = params.id || hotel.hotelId || hotel.id || hotel._id;
+      const matching = allBookings.filter(
+        (b) => (b.hotelId || b.hotel?.hotelId || b.hotel_id) === hotelId
+      );
+      setCompletedBookings(matching);
+    } catch {
+      setCompletedBookings([]);
+    } finally {
+      setFetchingBookings(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewForm.rating) {
+      toast.error('Please select a rating');
+      return;
+    }
+    if (!reviewDialog.bookingId) {
+      toast.error('Please select a booking');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { rating, title, comment, categories } = reviewForm;
+      const cats = {};
+      ['roomCleanliness', 'staffService', 'amenities', 'valueForMoney', 'location'].forEach((key) => {
+        if (categories[key]) cats[key] = categories[key];
+      });
+      const hotelId = params.id || hotel.hotelId || hotel.id || hotel._id;
+      await reviewService.createHotelReview(
+        reviewDialog.bookingId, rating, title || undefined, comment || undefined,
+        Object.keys(cats).length > 0 ? cats : undefined, hotelId
+      );
+      toast.success('Review submitted successfully');
+      setReviewDialog({ open: false, bookingId: null });
+      fetchReviews(params.id);
+    } catch (error) {
+      toast.error(formatServerError(error.response?.data) || 'Failed to submit review');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -219,8 +308,165 @@ export default function HotelDetail() {
             </CardContent>
           </Card>
 
+          {/* Reviews Section */}
+          <Card className="shadow-lg">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" /> Reviews ({reviews.length})
+                </h2>
+                <Button
+                  size="sm"
+                  className="bg-amber-500 hover:bg-amber-600 text-white"
+                  onClick={openReviewDialog}
+                >
+                  <StarIcon className="w-4 h-4 mr-1" /> Write a Review
+                </Button>
+              </div>
+
+              {reviewsLoading ? (
+                <div className="space-y-3">
+                  <LoadingSkeleton count={3} type="list" />
+                </div>
+              ) : reviews.length > 0 ? (
+                <div className="space-y-3">
+                  {reviews.map((review) => (
+                    <ReviewCard key={review.id || review._id} review={review} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={MessageSquare}
+                  title="No Reviews Yet"
+                  description="This hotel hasn't received any reviews yet."
+                />
+              )}
+            </CardContent>
+          </Card>
+
         </div>
       </div>
+
+      {/* Review Dialog */}
+      <Dialog open={reviewDialog.open} onOpenChange={(open) => setReviewDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Write a Review</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {fetchingBookings ? (
+              <p className="text-sm text-gray-500 text-center py-4">Loading your bookings...</p>
+            ) : completedBookings.length === 0 ? (
+              <div className="text-center py-4 space-y-2">
+                <p className="text-sm text-gray-500">You need to have a booking at this hotel before reviewing.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setReviewDialog({ open: false, bookingId: null });
+                    setLocation(`/bookings/hotel/create?hotelId=${hotel.id || hotel._id || hotel.hotelId}`);
+                  }}
+                >
+                  Book This Hotel
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  <Label>Select Booking</Label>
+                  <select
+                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+                    value={reviewDialog.bookingId || ''}
+                    onChange={(e) => setReviewDialog(prev => ({ ...prev, bookingId: e.target.value }))}
+                  >
+                    <option value="">Choose a completed booking...</option>
+                    {completedBookings.map((b) => (
+                      <option key={b.id || b._id} value={b.id || b._id}>
+                        {b.checkInDate || b.date} — {b.hotelName || ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>Rating *</Label>
+                  <Rating
+                    rating={reviewForm.rating}
+                    size="lg"
+                    interactive
+                    onRatingChange={(val) => setReviewForm(prev => ({ ...prev, rating: val }))}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="review-title">Title</Label>
+                  <Input
+                    id="review-title"
+                    placeholder="Summarize your experience"
+                    value={reviewForm.title}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="review-comment">Comment</Label>
+                  <Textarea
+                    id="review-comment"
+                    placeholder="Tell others about your experience"
+                    rows={3}
+                    value={reviewForm.comment}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, comment: e.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Detailed Ratings (optional)</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { key: 'roomCleanliness', label: 'Room Cleanliness' },
+                      { key: 'staffService', label: 'Staff Service' },
+                      { key: 'amenities', label: 'Amenities' },
+                      { key: 'valueForMoney', label: 'Value for Money' },
+                      { key: 'location', label: 'Location' },
+                    ].map(({ key, label }) => (
+                      <div key={key} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                        <span className="text-sm text-gray-700">{label}</span>
+                        <Rating
+                          rating={reviewForm.categories[key] || 0}
+                          size="sm"
+                          interactive
+                          onRatingChange={(val) => setReviewForm(prev => ({
+                            ...prev,
+                            categories: { ...prev.categories, [key]: val },
+                          }))}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setReviewDialog({ open: false, bookingId: null })}
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 bg-primary hover:bg-primary/90 text-white"
+                    onClick={handleSubmitReview}
+                    disabled={submitting || !reviewForm.rating || !reviewDialog.bookingId}
+                  >
+                    {submitting ? 'Submitting...' : 'Submit Review'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

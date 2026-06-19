@@ -182,27 +182,16 @@ function TouristDashboard({ user, profile }) {
 function HotelDashboard({ user, profile }) {
   const [, setLocation] = useLocation();
   const [bookings, setBookings] = useState([]);
-  const [hotelData, setHotelData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.allSettled([
-      hotelBookingService.getBookings({}),
-      hotelService.getMe(),
-    ]).then(([b, h]) => {
-      if (b.status === 'fulfilled') {
-        const d = b.value?.data || b.value;
-        setBookings(Array.isArray(d) ? d : []);
-      }
-      if (h.status === 'fulfilled') {
-        const d = h.value?.data || h.value;
-        setHotelData(d);
-        updateUser({ profile: d });
-      }
-    }).finally(() => setLoading(false));
+    hotelBookingService.getBookings({}).then((res) => {
+      const d = res?.data || res;
+      setBookings(Array.isArray(d) ? d : []);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
-
-  const hp = { ...user, ...(hotelData || profile || {}) };
+  
+  const hp = { ...user, ...(profile || {}) };
 
   const activeCheckIns = bookings.filter(b => b.status === 'BOOKED' || b.status === 'CHECKED_IN').length;
   const pendingBookings = bookings.filter(b => b.status === 'PENDING').length;
@@ -412,27 +401,16 @@ function HotelDashboard({ user, profile }) {
 function GuideDashboard({ user, profile }) {
   const [, setLocation] = useLocation();
   const [bookings, setBookings] = useState([]);
-  const [guideData, setGuideData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.allSettled([
-      guideBookingService.getBookings({}),
-      guideService.getMe(),
-    ]).then(([b, g]) => {
-      if (b.status === 'fulfilled') {
-        const d = b.value?.data || b.value;
-        setBookings(Array.isArray(d) ? d : []);
-      }
-      if (g.status === 'fulfilled') {
-        const d = g.value?.data || g.value;
-        setGuideData(d);
-        updateUser({ profile: d });
-      }
-    }).finally(() => setLoading(false));
+    guideBookingService.getBookings({}).then((res) => {
+      const d = res?.data || res;
+      setBookings(Array.isArray(d) ? d : []);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  const gp = { ...user, ...(guideData || profile || {}) };;
+  const gp = { ...user, ...(profile || {}) };;
 
   const activeBookings = bookings.filter(b => b.status === 'ACCEPTED' || b.status === 'CONFIRMED').length;
   const pendingBookings = bookings.filter(b => b.status === 'PENDING').length;
@@ -683,12 +661,14 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [userRes, touristRes, hotelRes, guideRes] = await Promise.allSettled([
-          userService.getMe(),
-          touristService.getMe(),
-          hotelService.getMe(),
-          guideService.getMe(),
-        ]);
+        const userRole = (localUser?.role || "TOURIST").toUpperCase();
+        const promises = [userService.getMe()];
+        if (userRole === "HOTEL") promises.push(hotelService.getMe());
+        else if (userRole === "GUIDE") promises.push(guideService.getMe());
+        else promises.push(touristService.getMe());
+
+        const results = await Promise.allSettled(promises);
+        const userRes = results[0];
 
         let baseProfile = localUser;
         let roleSpecific = null;
@@ -698,15 +678,8 @@ export default function Dashboard() {
           if (d) baseProfile = d;
         }
 
-        const detectedRole = (baseProfile?.role || "TOURIST").toUpperCase();
-        if (detectedRole === "HOTEL" && hotelRes.status === 'fulfilled') {
-          const d = hotelRes.value?.data || hotelRes.value;
-          if (d) roleSpecific = d;
-        } else if (detectedRole === "GUIDE" && guideRes.status === 'fulfilled') {
-          const d = guideRes.value?.data || guideRes.value;
-          if (d) roleSpecific = d;
-        } else if (touristRes.status === 'fulfilled') {
-          const d = touristRes.value?.data || touristRes.value;
+        if (results.length > 1 && results[1].status === 'fulfilled') {
+          const d = results[1].value?.data || results[1].value;
           if (d) roleSpecific = d;
         }
 

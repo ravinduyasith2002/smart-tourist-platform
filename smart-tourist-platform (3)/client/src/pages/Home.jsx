@@ -2,13 +2,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { isAuthenticated as checkAuth } from "@/contexts/AuthContext";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Compass, Users, Hotel, MapPin, Star, Shield } from "lucide-react";
+
+// Rotating hero backgrounds — all free-to-use beach/coastal shots (Unsplash License)
+const heroImages = [
+  "https://images.unsplash.com/photo-1755928683108-6ef780a17382?auto=format&fit=crop&w=1920&q=80", // Hamilton Island, turquoise water + palms
+  "https://images.unsplash.com/photo-1733508244270-1155719f22d3?auto=format&fit=crop&w=1920&q=80", // golden beach sunset, rolling waves
+  "https://images.unsplash.com/photo-1745383792762-ccaeb8e972d0?auto=format&fit=crop&w=1920&q=80", // aerial drone shot, boat near white sand
+  "https://images.unsplash.com/photo-1692017827818-f020b6d75975?auto=format&fit=crop&w=1920&q=80", // palm trees, blue sky, daytime paradise
+];
+
+const SLIDE_DURATION_MS = 5000;
 
 export default function Home() {
   const [loggedIn] = useState(checkAuth());
   const [, setLocation] = useLocation();
+  const [slideIndex, setSlideIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % heroImages.length);
+    }, SLIDE_DURATION_MS);
+    return () => clearInterval(timer);
+  }, []);
 
   const features = [
     {
@@ -53,13 +71,27 @@ export default function Home() {
     <>
       <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50">
-        {/* Hero Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+        {/* Hero Section — auto-rotating beach photo slideshow */}
+        <section className="relative min-h-[640px] flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
+          {heroImages.map((src, index) => (
+            <div
+              key={src}
+              aria-hidden={index !== slideIndex}
+              className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-[1500ms] ease-in-out ${
+                index === slideIndex ? "opacity-100" : "opacity-0"
+              }`}
+              style={{ backgroundImage: `url('${src}')` }}
+            />
+          ))}
+
+          {/* Gradient overlay for text legibility, tinted to match brand palette */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-teal-900/50 to-cyan-800/20" />
+
+          <div className="relative max-w-7xl mx-auto text-center py-12">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg">
               Your Smart Travel Companion
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-100 mb-8 max-w-2xl mx-auto drop-shadow-md">
               Plan unforgettable adventures, connect with expert guides, and discover perfect accommodations all in one platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -75,6 +107,7 @@ export default function Home() {
                   <Button
                     size="lg"
                     variant="outline"
+                    className="bg-white/10 border-white/80 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
                     onClick={() => setLocation("/guides")}
                   >
                     Browse Guides
@@ -92,6 +125,7 @@ export default function Home() {
                   <Button
                     size="lg"
                     variant="outline"
+                    className="bg-white/10 border-white/80 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
                     onClick={() => setLocation("/login")}
                   >
                     Sign In
@@ -99,6 +133,22 @@ export default function Home() {
                 </>
               )}
             </div>
+          </div>
+
+          {/* Slide indicator dots */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+            {heroImages.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setSlideIndex(index)}
+                aria-label={`Show background ${index + 1}`}
+                aria-current={index === slideIndex}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === slideIndex ? "w-6 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
+                }`}
+              />
+            ))}
           </div>
         </section>
 

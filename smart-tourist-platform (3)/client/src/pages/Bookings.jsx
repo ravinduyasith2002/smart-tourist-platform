@@ -3,16 +3,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { guideBookingService } from "@/services/guideBooking.service";
 import { hotelBookingService } from "@/services/hotelBooking.service";
+import { reviewService } from "@/services/review.service";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Calendar, MapPin, Users } from "lucide-react";
+import { Calendar, MapPin, Users, Star as StarIcon } from "lucide-react";
 import { isAuthenticated as checkAuth } from "@/contexts/AuthContext";
 import { formatDate, formatServerError } from "@/utils/helpers";
 import { useLocation } from "wouter";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Rating } from "@/components/Rating";
+
+const GUIDE_CATEGORIES = [
+  { key: 'knowledge', label: 'Knowledge' },
+  { key: 'communication', label: 'Communication' },
+  { key: 'punctuality', label: 'Punctuality' },
+  { key: 'friendliness', label: 'Friendliness' },
+];
+
+const HOTEL_CATEGORIES = [
+  { key: 'roomCleanliness', label: 'Room Cleanliness' },
+  { key: 'staffService', label: 'Staff Service' },
+  { key: 'amenities', label: 'Amenities' },
+  { key: 'valueForMoney', label: 'Value for Money' },
+  { key: 'location', label: 'Location' },
+];
 
 export default function Bookings() {
   const [loggedIn] = useState(checkAuth());
@@ -20,6 +41,9 @@ export default function Bookings() {
   const [hotelBookings, setHotelBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [, setLocation] = useLocation();
+  const [reviewDialog, setReviewDialog] = useState({ open: false, type: 'guide', bookingId: null });
+  const [reviewForm, setReviewForm] = useState({ rating: 0, title: '', comment: '', categories: {} });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (loggedIn) {
@@ -70,6 +94,38 @@ export default function Bookings() {
       fetchBookings();
     } catch (error) {
       toast.error(formatServerError(error.response?.data) || "Failed to check in");
+    }
+  };
+
+  const openReviewDialog = (type, bookingId) => {
+    setReviewForm({ rating: 0, title: '', comment: '', categories: {} });
+    setReviewDialog({ open: true, type, bookingId });
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewForm.rating) {
+      toast.error('Please select a rating');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { rating, title, comment, categories } = reviewForm;
+      if (reviewDialog.type === 'guide') {
+        const cats = {};
+        GUIDE_CATEGORIES.forEach(({ key }) => { if (categories[key]) cats[key] = categories[key]; });
+        await reviewService.createGuideReview(reviewDialog.bookingId, rating, title || undefined, comment || undefined, Object.keys(cats).length > 0 ? cats : undefined);
+      } else {
+        const cats = {};
+        HOTEL_CATEGORIES.forEach(({ key }) => { if (categories[key]) cats[key] = categories[key]; });
+        await reviewService.createHotelReview(reviewDialog.bookingId, rating, title || undefined, comment || undefined, Object.keys(cats).length > 0 ? cats : undefined);
+      }
+      toast.success('Review submitted successfully');
+      setReviewDialog({ open: false, type: 'guide', bookingId: null });
+      fetchBookings();
+    } catch (error) {
+      toast.error(formatServerError(error.response?.data) || 'Failed to submit review');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -158,6 +214,14 @@ export default function Bookings() {
                               Cancel Booking
                             </Button>
                           )}
+                          {booking?.status === "COMPLETED" && (
+                            <Button
+                              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+                              onClick={() => openReviewDialog('guide', booking.id || booking._id)}
+                            >
+                              <StarIcon className="w-4 h-4 mr-1" /> Write Review
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -240,6 +304,14 @@ export default function Bookings() {
                               Check Out
                             </Button>
                           )}
+                          {booking?.status === "COMPLETED" && (
+                            <Button
+                              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+                              onClick={() => openReviewDialog('hotel', booking.id || booking._id)}
+                            >
+                              <StarIcon className="w-4 h-4 mr-1" /> Write Review
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -256,6 +328,87 @@ export default function Bookings() {
           </Tabs>
         </div>
       </div>
+
+      {/* Review Dialog */}
+      <Dialog open={reviewDialog.open} onOpenChange={(open) => setReviewDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Write a Review</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Rating *</Label>
+              <Rating
+                rating={reviewForm.rating}
+                size="lg"
+                interactive
+                onRatingChange={(val) => setReviewForm(prev => ({ ...prev, rating: val }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="review-title">Title</Label>
+              <Input
+                id="review-title"
+                placeholder="Summarize your experience"
+                value={reviewForm.title}
+                onChange={(e) => setReviewForm(prev => ({ ...prev, title: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="review-comment">Comment</Label>
+              <Textarea
+                id="review-comment"
+                placeholder="Tell others about your experience"
+                rows={3}
+                value={reviewForm.comment}
+                onChange={(e) => setReviewForm(prev => ({ ...prev, comment: e.target.value }))}
+              />
+            </div>
+
+            {(reviewDialog.type === 'guide' ? GUIDE_CATEGORIES : HOTEL_CATEGORIES).length > 0 && (
+              <div className="space-y-2">
+                <Label>Detailed Ratings (optional)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(reviewDialog.type === 'guide' ? GUIDE_CATEGORIES : HOTEL_CATEGORIES).map(({ key, label }) => (
+                    <div key={key} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                      <span className="text-sm text-gray-700">{label}</span>
+                      <Rating
+                        rating={reviewForm.categories[key] || 0}
+                        size="sm"
+                        interactive
+                        onRatingChange={(val) => setReviewForm(prev => ({
+                          ...prev,
+                          categories: { ...prev.categories, [key]: val },
+                        }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setReviewDialog({ open: false, type: 'guide', bookingId: null })}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-primary hover:bg-primary/90 text-white"
+                onClick={handleSubmitReview}
+                disabled={submitting || !reviewForm.rating}
+              >
+                {submitting ? 'Submitting...' : 'Submit Review'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -3,45 +3,33 @@ import axiosInstance, { API_BASE } from '@/lib/axios';
 const REVIEW_API = `${API_BASE}/reviews`;
 
 export const reviewService = {
-  createGuideReview: async (guideBookingId, rating, title, comment, categories) => {
+  // Guide reviews
+  createGuideReview: async (guideBookingId, rating, title, comment, categories, guideId) => {
     const response = await axiosInstance.post(`${REVIEW_API}/guides/${guideBookingId}`, {
-      rating, title, comment, categories,
+      rating, title, comment, categories, guideId,
     });
     return response.data;
   },
 
-  getGuideReviews: async (guideId) => {
-    const response = await axiosInstance.get(`${REVIEW_API}/guides?guideId=${guideId}`);
+  getGuideReviewsByGuide: async (guideId, page = 1, limit = 10) => {
+    const response = await axiosInstance.get(`${REVIEW_API}/guides/${guideId}`, {
+      params: { page, limit },
+    });
     return response.data;
   },
 
-  createHotelReview: async (hotelBookingId, rating, title, comment, categoryRatings) => {
+  // Hotel reviews
+  createHotelReview: async (hotelBookingId, rating, title, comment, categoryRatings, hotelId) => {
     const response = await axiosInstance.post(`${REVIEW_API}/hotels/${hotelBookingId}`, {
-      rating, title, comment, categoryRatings,
+      rating, title, comment, categoryRatings, hotelId,
     });
     return response.data;
   },
 
-  getHotelReviews: async (hotelId) => {
-    const response = await axiosInstance.get(`${REVIEW_API}/hotels?hotelId=${hotelId}`);
+  getHotelReviewsByHotel: async (hotelId, sort = '-rating') => {
+    const response = await axiosInstance.get(`${REVIEW_API}/hotels/${hotelId}`, {
+      params: { sort },
+    });
     return response.data;
-  },
-
-  updateGuideReview: async (reviewId, data) => {
-    const response = await axiosInstance.put(`${REVIEW_API}/guides/${reviewId}`, data);
-    return response.data;
-  },
-
-  updateHotelReview: async (reviewId, data) => {
-    const response = await axiosInstance.put(`${REVIEW_API}/hotels/${reviewId}`, data);
-    return response.data;
-  },
-
-  deleteGuideReview: async (reviewId) => {
-    await axiosInstance.delete(`${REVIEW_API}/guides/${reviewId}`);
-  },
-
-  deleteHotelReview: async (reviewId) => {
-    await axiosInstance.delete(`${REVIEW_API}/hotels/${reviewId}`);
   },
 };
