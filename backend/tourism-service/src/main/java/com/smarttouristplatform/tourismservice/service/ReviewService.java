@@ -31,8 +31,7 @@ public class ReviewService {
         BeanUtils.copyProperties(request, review);
         review.setTouristId(touristId);
         review.setGuideBookingId(guideBookingId);
-        // In a real app, fetch guideId from guideBookingId
-        review.setGuideId("sampleGuideId");
+        review.setGuideId(request.getGuideId());
         review.setCreatedAt(LocalDateTime.now());
         review.setUpdatedAt(LocalDateTime.now());
 
@@ -49,7 +48,7 @@ public class ReviewService {
         review.setTouristId(touristId);
         review.setHotelBookingId(hotelBookingId);
         // In a real app, fetch hotelId from hotelBookingId
-        review.setHotelId("sampleHotelId");
+        review.setHotelId(request.getHotelId());
         review.setCreatedAt(LocalDateTime.now());
         review.setUpdatedAt(LocalDateTime.now());
 

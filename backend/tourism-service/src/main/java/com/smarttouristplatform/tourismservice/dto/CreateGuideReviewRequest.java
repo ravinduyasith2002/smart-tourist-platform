@@ -15,6 +15,7 @@ public class CreateGuideReviewRequest {
     private Integer rating;
     @NotBlank(message = "Title cannot be blank")
     private String title;
+    private String guideId;
     private String comment;
     @Valid
     private ReviewCategoriesDTO categories;
